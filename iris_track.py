@@ -6,7 +6,7 @@ import pyautogui
 import math
 
 mp_face_mesh = mp.solutions.face_mesh
-pyautogui.FAILSAFE = False
+face_cascade = cv.CascadeClassifier('haarcascade_frontalface_alt.xml')
 
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
 # right eyes indices
@@ -18,8 +18,6 @@ L_H_LEFT = [33]
 L_H_RIGHT = [133]
 R_H_LEFT = [362]
 R_H_RIGHT = [263]
-
-screen_w, screen_h = pyautogui.size()
 
 def euclidian_distance(vec1, vec2):
     x1, y1 = vec1.ravel()
@@ -39,8 +37,8 @@ def position(iris_center, right_vec, left_vec):
         position = 'right'
     return position, ratio
 cap = cv.VideoCapture(1)
+
 with mp_face_mesh.FaceMesh(
-    max_num_faces=1,
     refine_landmarks=True,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
@@ -51,8 +49,14 @@ with mp_face_mesh.FaceMesh(
             break
         frame = cv.flip(frame, 1)
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        faces = face_cascade.detectMultiScale(rgb_frame, minNeighbors=5, scaleFactor=1.1, minSize=(25, 25))
+        if len(faces) > 1:
+            print("The student must take the test alone!!!!!!!")
+
         img_h, img_w = frame.shape[:2]
         results = face_mesh.process(rgb_frame)
+
+
         if results.multi_face_landmarks:
             # print(results.multi_face_landmarks[0].landmark)
             mesh_points=np.array([np.multiply([p.x, p.y], [img_w, img_h]).astype(int) for p in results.multi_face_landmarks[0].landmark])
@@ -77,7 +81,7 @@ with mp_face_mesh.FaceMesh(
 
             print(" ")
             if pos != "center":
-                if (mid_cx >= 390 and mid_cy >= 247) or (mid_cx <= 295 and mid_cy >= 250):
+                if (mid_cx >= 390 and mid_cy >= 247) or (mid_cx <= 235 and mid_cy >= 250):
                     print("look at the screenn!!!!!!!!!")
             else:
                 if mid_cy >= 255:
